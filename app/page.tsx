@@ -212,7 +212,7 @@ export default function ConstructionFunnel() {
             <div className="flex items-center space-x-3">
               <Building2 className="w-8 h-8 text-white" />
               <span className="text-2xl font-bold text-white">
-              LOGO
+            VeressGoldBAU
               </span>
             </div>
             <div className="hidden md:flex items-center space-x-6 text-white">
