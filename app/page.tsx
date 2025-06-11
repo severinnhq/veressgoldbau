@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import {   Clock, Phone, Mail,  CheckCircle,  Star, Building2 } from 'lucide-react';
 import NegativeConsequences from '@/components/NegativeConsequences';
-import ReviewSection from '@/components/ReviewSection';
+{/*import ReviewSection from '@/components/ReviewSection'; */}  
 
 
 interface FormData {
