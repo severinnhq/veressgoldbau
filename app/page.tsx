@@ -212,7 +212,7 @@ export default function ConstructionFunnel() {
             <div className="flex items-center space-x-3">
               <Building2 className="w-8 h-8 text-white" />
               <span className="text-2xl font-bold text-white">
-                ÉPÍTŐ MESTEREK
+              LOGO
               </span>
             </div>
             <div className="hidden md:flex items-center space-x-6 text-white">
@@ -222,7 +222,7 @@ export default function ConstructionFunnel() {
               </div>
               <div className="flex items-center space-x-2">
                 <Mail className="w-4 h-4 text-gray-300" />
-                <span>info@epitomesterek.hu</span>
+                <span>email</span>
               </div>
             </div>
           </div>
@@ -412,7 +412,7 @@ export default function ConstructionFunnel() {
         )}
       </div>
       <NegativeConsequences />
-      <ReviewSection />
+     {/* <ReviewSection /> */}
     </div>
   );
 }
