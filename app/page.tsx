@@ -1,9 +1,12 @@
-'use client';
+"use client";
 
 import React, { useState, useEffect } from 'react';
-import {   Clock, Phone, Mail,  CheckCircle,  Star, Building2 } from 'lucide-react';
+import { Clock, Phone, Mail, CheckCircle, Star, Building2 } from 'lucide-react';
 import NegativeConsequences from '@/components/NegativeConsequences';
-{/*import ReviewSection from '@/components/ReviewSection'; */}  
+import ReviewsGallery from '@/components/ReviewsGallery';
+import Header from '@/components/Header';
+import Hero from '@/components/Hero'; 
+import FbReps from '@/components/FbReps';
 
 
 interface FormData {
@@ -49,14 +52,11 @@ export default function ConstructionFunnel() {
   const [showResults, setShowResults] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
-  // ► key under which we persist quiz progress
   const STORAGE_KEY = 'quizProgress';
 
-  // ► on mount: clear only if a "fresh" navigation, otherwise restore
   useEffect(() => {
     const [nav] = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
     if (nav?.type === 'navigate') {
-      // user arrived by link/bookmark—start fresh
       localStorage.removeItem(STORAGE_KEY);
     }
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -66,19 +66,14 @@ export default function ConstructionFunnel() {
         setCurrentStep(step);
         setFormData(data);
         setShowResults(results);
-      } catch { /* ignore parse errors */ }
+      } catch { }
     }
   }, []);
 
-  // ► on any state change, save to localStorage
   useEffect(() => {
     localStorage.setItem(
       STORAGE_KEY,
-     JSON.stringify({
-        step: currentStep,
-        data: formData,
-        results: showResults,
-      })
+      JSON.stringify({ step: currentStep, data: formData, results: showResults })
     );
   }, [currentStep, formData, showResults]);
 
@@ -96,10 +91,34 @@ export default function ConstructionFunnel() {
       type: "single",
       field: "projectType",
       options: [
-        { value: "modern", label: "Modern családi ház", icon: "🏗️" },
-        { value: "traditional", label: "Hagyományos magyar ház", icon: "🏠" },
-        { value: "luxury", label: "Luxus villa", icon: "🏛️" },
-        { value: "eco", label: "Környezetbarát ház", icon: "🌱" }
+        { value: "modern", label: "Modern családi ház", icon: "modern.png" },
+        { value: "traditional", label: "Hagyományos magyar ház", icon: "traditional.png" },
+        { value: "luxury", label: "Luxus villa", icon: "luxury.png" },
+        { value: "eco", label: "Környezetbarát ház", icon: "eco.png" }
+      ]
+    },
+     {
+       question: "Mekkora házat képzel el?",
+       type: "single",
+       field: "size",
+       options: [
+         { value: "0-50", label: "0-50 m²", icon: "size-0-50.png" },
+         { value: "50-100", label: "50-100 m²", icon: "size-50-100.png" },
+         { value: "100-150", label: "100-150 m²", icon: "size-100-150.png" },
+         { value: "150-200", label: "150-200 m²", icon: "size-150-200.png" },
+         { value: "200+", label: "200+ m²", icon: "size-200plus.png" },
+         { value: "idk", label: "Nem tudom", icon: "size-idk.png" }
+       ]
+     },
+    {
+      question: "Mikor szeretné elkezdeni az építkezést?",
+      type: "single",
+      field: "timeline",
+      options: [
+        { value: "immediately", label: "Azonnal", icon: "immediately.png" },
+        { value: "3months", label: "3 hónapon belül", icon: "3months.png" },
+        { value: "6months", label: "6 hónapon belül", icon: "6months.png" },
+        { value: "1year", label: "1 éven belül", icon: "1year.png" }
       ]
     },
     {
@@ -107,32 +126,10 @@ export default function ConstructionFunnel() {
       type: "single",
       field: "budget",
       options: [
-        { value: "10-25", label: "10-25 millió Ft", icon: "💰" },
-        { value: "25-50", label: "25-50 millió Ft", icon: "💎" },
-        { value: "50-100", label: "50-100 millió Ft", icon: "👑" },
-        { value: "100+", label: "100+ millió Ft", icon: "✨" }
-      ]
-    },
-    {
-      question: "Mikor szeretné elkezdeni az építkezést?",
-      type: "single",
-      field: "timeline",
-      options: [
-        { value: "immediately", label: "Azonnal", icon: "⚡" },
-        { value: "3months", label: "3 hónapon belül", icon: "📅" },
-        { value: "6months", label: "6 hónapon belül", icon: "🗓️" },
-        { value: "1year", label: "1 éven belül", icon: "⏰" }
-      ]
-    },
-    {
-      question: "Mekkora házat képzel el?",
-      type: "single",
-      field: "size",
-      options: [
-        { value: "small", label: "80-120 m²", icon: "🏘️" },
-        { value: "medium", label: "120-200 m²", icon: "🏡" },
-        { value: "large", label: "200-300 m²", icon: "🏠" },
-        { value: "xlarge", label: "300+ m²", icon: "🏰" }
+        { value: "10-25", label: "10-25 millió Ft", icon: "50-100.png" },
+        { value: "25-50", label: "25-50 millió Ft", icon: "25-50.png" },
+        { value: "50-100", label: "50-100 millió Ft", icon: "50-100.png" },
+        { value: "100+", label: "100+ millió Ft", icon: "100plus.png" }
       ]
     },
     {
@@ -140,21 +137,20 @@ export default function ConstructionFunnel() {
       type: "multiple",
       field: "features",
       options: [
-        { value: "pool", label: "Medence", icon: "🏊" },
-        { value: "garage", label: "Garázs", icon: "🚗" },
-        { value: "garden", label: "Kertészeti munkák", icon: "🌳" },
-        { value: "smart", label: "Okos otthon rendszer", icon: "📱" },
-        { value: "solar", label: "Napelem rendszer", icon: "☀️" },
-        { value: "basement", label: "Pince", icon: "🏠" }
+        { value: "pool", label: "Medence", icon: "pool.png" },
+        { value: "garage", label: "Garázs", icon: "garage.png" },
+        { value: "garden", label: "Kertészeti munkák", icon: "garden.png" },
+        { value: "smart", label: "Okos otthon rendszer", icon: "smart.png" },
+        { value: "solar", label: "Napelem rendszer", icon: "solar.png" },
+        { value: "basement", label: "Pince", icon: "basement.png" }
       ]
     }
   ];
 
   const handleAnswerSelect = (value: string) => {
     const currentQuestion = quizSteps[currentStep - 1];
-    
     if (currentQuestion.type === 'multiple') {
-      const currentFeatures = formData.features || [];
+      const currentFeatures = formData.features;
       const newFeatures = currentFeatures.includes(value)
         ? currentFeatures.filter(f => f !== value)
         : [...currentFeatures, value];
@@ -165,7 +161,7 @@ export default function ConstructionFunnel() {
   };
 
   const nextStep = () => {
-    if (currentStep < quizSteps.length - 1) {
+    if (currentStep < quizSteps.length) {
       setCurrentStep(currentStep + 1);
     } else {
       setShowResults(true);
@@ -174,10 +170,9 @@ export default function ConstructionFunnel() {
 
   const handleContactSubmit = () => {
     if (!formData.name || !formData.email || !formData.phone) {
-      alert('Kérjük, töltse ki az összes kötelező mezőt!');
+      alert('Kérjük, töltsd ki az összes kötelez mezőt!');
       return;
     }
-    // Here you would typically send the data to your backend
     alert('Köszönjük! Hamarosan felvesszük Önnel a kapcsolatot!');
   };
 
@@ -191,118 +186,108 @@ export default function ConstructionFunnel() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 text-gray-800 overflow-hidden">
-      {/* Animated background elements with glowing effects */}
-      <div className="fixed inset-0 opacity-30">
-        <div 
-          className="absolute w-96 h-96 bg-gradient-to-r from-blue-200 to-purple-200 rounded-full blur-3xl animate-pulse"
-          style={{
-            left: mousePosition.x / 10,
-            top: mousePosition.y / 10,
-            transform: 'translate(-50%, -50%)'
-          }}
-        />
-        <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-gradient-to-r from-pink-200 to-blue-200 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 left-1/4 w-48 h-48 bg-gradient-to-r from-cyan-200 to-blue-200 rounded-full blur-3xl animate-bounce" />
-      </div>
-
-      {/* Header */}
-      <header className="relative z-10 backdrop-blur-lg border-b border-gray-300" style={{ backgroundColor: '#302f2f' }}>
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Building2 className="w-8 h-8 text-white" />
-              <span className="text-2xl font-bold text-white">
-            VeressGoldBAU
-              </span>
-            </div>
-            <div className="hidden md:flex items-center space-x-6 text-white">
-              <div className="flex items-center space-x-2">
-                <Phone className="w-4 h-4 text-gray-300" />
-                <span>+36 XX XXX XXXX</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Mail className="w-4 h-4 text-gray-300" />
-                <span>email</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+          {/* <Header /> */}
+    <Hero /> {/* ✅ Inserted hero section */}
 
       <div className="relative z-10">
         {!showResults ? (
           <section className="container mx-auto px-6 py-20">
             <div className="max-w-4xl mx-auto">
-              {/* Progress bar */}
               <div className="mb-12">
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-sm text-gray-600">
-                    {currentStep}. lépés {quizSteps.length}-ból
-                  </span>
-                  <span className="text-sm text-gray-600">
-                    {Math.round((currentStep / quizSteps.length) * 100)}% kész
-                  </span>
+                <div className="flex justify-between mb-4 text-sm text-gray-600">
+                  <span>{currentStep}. lépés {quizSteps.length}-ból</span>
+                  <span>{Math.round((currentStep / quizSteps.length) * 100)}% kész</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="h-2 rounded-full transition-all duration-500 ease-out shadow-lg"
-                    style={{ width: `${(currentStep / quizSteps.length) * 100}%`, backgroundColor: '#ffc500' }}
-                  />
+                  <div className="h-2 rounded-full transition-all duration-500 ease-out shadow-lg" style={{ width: `${(currentStep / quizSteps.length) * 100}%`, backgroundColor: '#ffc500' }} />
                 </div>
               </div>
 
               <div className="bg-white/90 backdrop-blur-lg rounded-3xl p-8 border border-gray-200 shadow-2xl">
-                <h2 className="text-3xl md:text-4xl font-bold mb-8 text-center text-gray-800">
-                  {quizSteps[currentStep - 1]?.question}
-                </h2>
+                <h2 className="text-3xl md:text-4xl font-bold mb-8 text-center text-gray-800">{quizSteps[currentStep - 1]?.question}</h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                  {quizSteps[currentStep - 1]?.options.map((option: QuizOption, index: number) => {
-                    const currentQuestion = quizSteps[currentStep - 1];
-                    const isSelected = currentQuestion.type === 'multiple' 
-                      ? formData.features?.includes(option.value)
-                      : formData[currentQuestion.field as keyof FormData] === option.value;
-                    
-                    return (
-                      <button
-                        key={index}
-                        onClick={() => {
-                          handleAnswerSelect(option.value);
-                          if (quizSteps[currentStep - 1].type !== 'multiple') {
-                            setTimeout(() => nextStep(), 300);
-                          }
-                        }}
-                        className={`group p-6 rounded-2xl border-2 transition-all duration-300 transform hover:scale-105 ${
-                          isSelected
-                            ? 'border-blue-400 bg-blue-50 shadow-lg shadow-blue-500/25'
-                            : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-gray-50'
-                        }`}
-                      >
-                        <div className="flex items-center space-x-4">
-                          <span className="text-3xl">{option.icon}</span>
-                          <span className="text-lg font-medium text-gray-800">{option.label}</span>
-                          {isSelected && <CheckCircle className="w-6 h-6 text-blue-500 ml-auto" />}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+                {/* Conditionally render timeline & budget as vertical radio buttons */}
+                {['timeline', 'budget'].includes(quizSteps[currentStep - 1]?.field) ? (
+                  <div className="flex flex-col items-start gap-4 mb-8 max-w-md mx-auto">
+                    {quizSteps[currentStep - 1]?.options.map((option, i) => {
+                      const currentQuestion = quizSteps[currentStep - 1];
+                      const isSelected = formData[currentQuestion.field] === option.value;
+
+                      return (
+                        <label key={i} className="flex items-center space-x-3 cursor-pointer">
+                          <input
+                            type="radio"
+                            name={currentQuestion.field}
+                            value={option.value}
+                            checked={isSelected}
+                            onChange={() => {
+                              handleAnswerSelect(option.value);
+                              setTimeout(nextStep, 300);
+                            }}
+                            className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300"
+                          />
+                          <span className="text-gray-800 text-base font-medium">{option.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className={`
+                    grid gap-3 mb-8 max-w-fit mx-auto
+                    grid-cols-2
+                    md:grid-cols-${quizSteps[currentStep - 1]?.options.length === 4 ? '2' : '3'}
+                  `}>
+                    {quizSteps[currentStep - 1]?.options.map((option, i) => {
+                      const currentQuestion = quizSteps[currentStep - 1];
+                      const isSelected = currentQuestion.type === 'multiple'
+                        ? formData.features.includes(option.value)
+                        : formData[currentQuestion.field] === option.value;
+
+                      const buttonWidth = quizSteps[currentStep - 1]?.options.length === 4 ? 'w-52' : 'w-44';
+                      const imageHeight = quizSteps[currentStep - 1]?.options.length === 4 ? 'h-40' : 'h-32';
+
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            handleAnswerSelect(option.value);
+                            if (currentQuestion.type === 'single') setTimeout(nextStep, 300);
+                          }}
+                          className={`group ${buttonWidth} p-3 rounded-2xl border-2 transition-all duration-300 transform hover:scale-105 flex flex-col justify-between ${
+                            isSelected
+                              ? 'border-blue-500 bg-blue-50 shadow-md shadow-blue-400/30'
+                              : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className={`${imageHeight} flex flex-col items-center justify-between`}>
+                            <div className="flex-grow overflow-hidden">
+                              <img
+                                src={`/uploads/${option.icon}`} 
+                                alt={option.label} 
+                                className="w-full h-full object-cover rounded-t-xl"
+                              />
+                            </div>
+                            <div className="h-10 flex items-center justify-center px-2">
+                              <span className="text-sm font-semibold text-gray-800 text-center leading-tight">
+                                {option.label}
+                              </span>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
 
                 {currentStep > 1 && (
                   <div className="flex justify-center mt-4">
-                    <button
-                      onClick={() => setCurrentStep(currentStep - 1)}
-                      className="group bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-full text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow"
-                    >
-                      VISSZA
-                    </button>
+                    <button onClick={() => setCurrentStep(currentStep - 1)} className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-full text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow">VISSZA</button>
                   </div>
                 )}
               </div>
             </div>
           </section>
         ) : (
-          /* Results Section */
           <section className="container mx-auto px-6 py-20">
             <div className="max-w-6xl mx-auto">
               <div className="text-center mb-12">
@@ -408,11 +393,12 @@ export default function ConstructionFunnel() {
                 </div>
               </div>
             </div>
-          </section>
+          </section> 
         )}
       </div>
       <NegativeConsequences />
-     {/* <ReviewSection /> */}
+      <ReviewsGallery />
+  {/* <FbReps /> */}
     </div>
   );
 }
