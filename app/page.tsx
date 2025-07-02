@@ -359,7 +359,7 @@ export default function ConstructionFunnel() {
                           : 'bg-blue-600 text-white hover:bg-blue-500'
                       }`}
                     >
-                      AJÁNLATOT KAPOK
+                      AJÁNLATOT KÉREK
                     </button>
                   </div>
                   
