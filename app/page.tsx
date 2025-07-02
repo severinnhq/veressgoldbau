@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Clock, Phone, Mail, CheckCircle, Star, Building2 } from 'lucide-react';
 import NegativeConsequences from '@/components/NegativeConsequences';
 import ReviewsGallery from '@/components/ReviewsGallery';
-import Header from '@/components/Header';
+
 import Hero from '@/components/Hero'; 
-import FbReps from '@/components/FbReps';
+
 
 interface FormData {
   projectType: string;
@@ -51,7 +50,7 @@ export default function ConstructionFunnel() {
     acceptedPrivacy: false
   });
   const [showResults, setShowResults] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
   const [errors, setErrors] = useState<{email?: string; phone?: string}>({});
 
   const STORAGE_KEY = 'quizProgress';
@@ -79,13 +78,7 @@ export default function ConstructionFunnel() {
     );
   }, [currentStep, formData, showResults]);
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+
 
   const validateEmail = (email: string): boolean => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -244,31 +237,9 @@ export default function ConstructionFunnel() {
     }
   };
 
-  const handleContactSubmit = () => {
-    if (!formData.name || !formData.email || !formData.phone) {
-      alert('Kérjük, töltsd ki az összes kötelező mezőt!');
-      return;
-    }
+ 
     
-    if (!validateContactInfo()) {
-      return;
-    }
-    
-    if (!formData.acceptedPrivacy) {
-      alert('Kérjük, fogadja el az adatkezelési tájékoztatót!');
-      return;
-    }
-    
-    alert('Köszönjük! Hamarosan felvesszük Önnel a kapcsolatot!');
-  };
-
-  const getBudgetLevel = (): string => {
-    const budget = formData.budget;
-    if (budget === '100+') return 'PRÉMIUM';
-    if (budget === '50-100') return 'LUXUS';
-    if (budget === '25-50') return 'PRÉMIUM';
-    return 'STANDARD';
-  };
+  
 
 
   return (
