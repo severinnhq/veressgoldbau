@@ -10,8 +10,7 @@ const ReviewsGallery = () => {
     'review6.png',
     'review7.png',
     'review8.png',
-    'review9.png',
-    'review10.png'
+    'review9.png'
   ];
 
   return (

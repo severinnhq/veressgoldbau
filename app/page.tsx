@@ -8,7 +8,6 @@ import Header from '@/components/Header';
 import Hero from '@/components/Hero'; 
 import FbReps from '@/components/FbReps';
 
-
 interface FormData {
   projectType: string;
   budget: string;
@@ -20,6 +19,7 @@ interface FormData {
   name: string;
   email: string;
   phone: string;
+  acceptedPrivacy: boolean;
 }
 
 interface QuizOption {
@@ -30,9 +30,9 @@ interface QuizOption {
 
 interface QuizStep {
   question: string;
-  type: 'single' | 'multiple';
-  field: keyof FormData;
-  options: QuizOption[];
+  type: 'single' | 'multiple' | 'input' | 'contact';
+  field?: keyof FormData;
+  options?: QuizOption[];
 }
 
 export default function ConstructionFunnel() {
@@ -47,10 +47,12 @@ export default function ConstructionFunnel() {
     features: [],
     name: '',
     email: '',
-    phone: ''
+    phone: '',
+    acceptedPrivacy: false
   });
   const [showResults, setShowResults] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [errors, setErrors] = useState<{email?: string; phone?: string}>({});
 
   const STORAGE_KEY = 'quizProgress';
 
@@ -85,6 +87,72 @@ export default function ConstructionFunnel() {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
+  const validateEmail = (email: string): boolean => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
+
+  const validatePhone = (phone: string): boolean => {
+    // Simple phone validation - at least 6 digits
+    const re = /^[0-9\s+\-()]{6,}$/;
+    return re.test(phone);
+  };
+
+  const sendToGHL = async () => {
+    const payload = {
+      contact: {
+        project_type: formData.projectType,
+        size:         formData.size,
+        timeline:     formData.timeline,
+        budget:       formData.budget,
+        location:     formData.location,
+        features:     formData.features.join(', '),
+        email:        formData.email,
+        phone:        formData.phone,
+        name:         formData.name,
+      }
+    };
+
+    try {
+      const res = await fetch(
+        'https://services.leadconnectorhq.com/hooks/bJPQjhb90Jsg6klKL6Hm/webhook-trigger/fafe3546-ffef-4178-8ca1-ba14a73ae1f2',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.error('GHL webhook error:', res.status, text);
+        alert('Hiba történt az adatok elküldésekor.');
+        return;
+      }
+
+      alert('Köszönjük! Az adatokat elküldtük.');
+      setShowResults(true);
+    } catch (err) {
+      console.error('Network error sending to GHL:', err);
+      alert('Hálózati hiba történt.');
+    }
+  };
+
+  const validateContactInfo = () => {
+    const newErrors: {email?: string; phone?: string} = {};
+    
+    if (formData.email && !validateEmail(formData.email)) {
+      newErrors.email = 'Érvénytelen e-mail cím formátum';
+    }
+    
+    if (formData.phone && !validatePhone(formData.phone)) {
+      newErrors.phone = 'Érvénytelen telefonszám formátum';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const quizSteps: QuizStep[] = [
     {
       question: "Milyen típusú házat szeretne építeni?",
@@ -97,28 +165,27 @@ export default function ConstructionFunnel() {
         { value: "eco", label: "Környezetbarát ház", icon: "eco.png" }
       ]
     },
-     {
-       question: "Mekkora házat képzel el?",
-       type: "single",
-       field: "size",
-       options: [
-         { value: "0-50", label: "0-50 m²", icon: "size-0-50.png" },
-         { value: "50-100", label: "50-100 m²", icon: "size-50-100.png" },
-         { value: "100-150", label: "100-150 m²", icon: "size-100-150.png" },
-         { value: "150-200", label: "150-200 m²", icon: "size-150-200.png" },
-         { value: "200+", label: "200+ m²", icon: "size-200plus.png" },
-         { value: "idk", label: "Nem tudom", icon: "size-idk.png" }
-       ]
-     },
+    {
+      question: "Mekkora házat képzel el?",
+      type: "single",
+      field: "size",
+      options: [
+        { value: "0-50", label: "0-50 m²", icon: "size-0-50.png" },
+        { value: "50-100", label: "50-100 m²", icon: "size-50-100.png" },
+        { value: "100-150", label: "100-150 m²", icon: "size-100-150.png" },
+        { value: "150-200", label: "150-200 m²", icon: "size-150-200.png" },
+        { value: "200+", label: "200+ m²", icon: "size-200plus.png" },
+        { value: "idk", label: "Nem tudom", icon: "size-idk.png" }
+      ]
+    },
     {
       question: "Mikor szeretné elkezdeni az építkezést?",
       type: "single",
       field: "timeline",
       options: [
-        { value: "immediately", label: "Azonnal", icon: "immediately.png" },
-        { value: "3months", label: "3 hónapon belül", icon: "3months.png" },
-        { value: "6months", label: "6 hónapon belül", icon: "6months.png" },
-        { value: "1year", label: "1 éven belül", icon: "1year.png" }
+        { value: "azonnal", label: "Azonnal", icon: "immediately.png" },
+        { value: "1-2 het", label: "1-2 héten belül", icon: "1-2hetes.png" },
+        { value: "1honap", label: "1 hónap múlva", icon: "1month.png" }
       ]
     },
     {
@@ -133,6 +200,11 @@ export default function ConstructionFunnel() {
       ]
     },
     {
+      question: "Hol lesz az építkezés helyszíne? (város)",
+      type: "input",
+      field: "location"
+    },
+    {
       question: "Milyen extra szolgáltatások érdekelnek?",
       type: "multiple",
       field: "features",
@@ -142,20 +214,24 @@ export default function ConstructionFunnel() {
         { value: "garden", label: "Kertészeti munkák", icon: "garden.png" },
         { value: "smart", label: "Okos otthon rendszer", icon: "smart.png" },
         { value: "solar", label: "Napelem rendszer", icon: "solar.png" },
-        { value: "basement", label: "Pince", icon: "basement.png" }
+        { value: "none", label: "Egyik se", icon: "none.png" }
       ]
+    },
+    {
+      question: "Kapcsolattartási adatok",
+      type: "contact"
     }
   ];
 
   const handleAnswerSelect = (value: string) => {
     const currentQuestion = quizSteps[currentStep - 1];
-    if (currentQuestion.type === 'multiple') {
+    if (currentQuestion.type === 'multiple' && currentQuestion.field) {
       const currentFeatures = formData.features;
       const newFeatures = currentFeatures.includes(value)
         ? currentFeatures.filter(f => f !== value)
         : [...currentFeatures, value];
       setFormData({ ...formData, features: newFeatures });
-    } else {
+    } else if (currentQuestion.field) {
       setFormData({ ...formData, [currentQuestion.field]: value });
     }
   };
@@ -170,9 +246,19 @@ export default function ConstructionFunnel() {
 
   const handleContactSubmit = () => {
     if (!formData.name || !formData.email || !formData.phone) {
-      alert('Kérjük, töltsd ki az összes kötelez mezőt!');
+      alert('Kérjük, töltsd ki az összes kötelező mezőt!');
       return;
     }
+    
+    if (!validateContactInfo()) {
+      return;
+    }
+    
+    if (!formData.acceptedPrivacy) {
+      alert('Kérjük, fogadja el az adatkezelési tájékoztatót!');
+      return;
+    }
+    
     alert('Köszönjük! Hamarosan felvesszük Önnel a kapcsolatot!');
   };
 
@@ -184,11 +270,10 @@ export default function ConstructionFunnel() {
     return 'STANDARD';
   };
 
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 text-gray-800 overflow-hidden">
-          {/* <Header /> */}
-    <Hero /> {/* ✅ Inserted hero section */}
-
+      <Hero />
       <div className="relative z-10">
         {!showResults ? (
           <section className="container mx-auto px-6 py-20">
@@ -199,89 +284,212 @@ export default function ConstructionFunnel() {
                   <span>{Math.round((currentStep / quizSteps.length) * 100)}% kész</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="h-2 rounded-full transition-all duration-500 ease-out shadow-lg" style={{ width: `${(currentStep / quizSteps.length) * 100}%`, backgroundColor: '#ffc500' }} />
+                  <div 
+                    className="h-2 rounded-full transition-all duration-500 ease-out shadow-lg" 
+                    style={{ width: `${(currentStep / quizSteps.length) * 100}%`, backgroundColor: '#ffc500' }} 
+                  />
                 </div>
               </div>
 
               <div className="bg-white/90 backdrop-blur-lg rounded-3xl p-8 border border-gray-200 shadow-2xl">
-                <h2 className="text-3xl md:text-4xl font-bold mb-8 text-center text-gray-800">{quizSteps[currentStep - 1]?.question}</h2>
+                <h2 className="text-3xl md:text-4xl font-bold mb-8 text-center text-gray-800">
+                  {quizSteps[currentStep - 1]?.question}
+                </h2>
 
-                {/* Conditionally render timeline & budget as vertical radio buttons */}
-                {['timeline', 'budget'].includes(quizSteps[currentStep - 1]?.field) ? (
-                  <div className="flex flex-col items-start gap-4 mb-8 max-w-md mx-auto">
-                    {quizSteps[currentStep - 1]?.options.map((option, i) => {
-                      const currentQuestion = quizSteps[currentStep - 1];
-                      const isSelected = formData[currentQuestion.field] === option.value;
-
-                      return (
-                        <label key={i} className="flex items-center space-x-3 cursor-pointer">
-                          <input
-                            type="radio"
-                            name={currentQuestion.field}
-                            value={option.value}
-                            checked={isSelected}
-                            onChange={() => {
-                              handleAnswerSelect(option.value);
-                              setTimeout(nextStep, 300);
-                            }}
-                            className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300"
-                          />
-                          <span className="text-gray-800 text-base font-medium">{option.label}</span>
-                        </label>
-                      );
-                    })}
+                {quizSteps[currentStep - 1]?.type === 'input' ? (
+                  <div className="max-w-sm mx-auto mb-8">
+                    <input
+                      type="text"
+                      placeholder="Írd be a várost"
+                      value={formData.location}
+                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    />
+                    <button
+                      onClick={nextStep}
+                      className="mt-4 w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-500 transition-all"
+                    >
+                      TOVÁBB
+                    </button>
                   </div>
-                ) : (
-                  <div className={`
-                    grid gap-3 mb-8 max-w-fit mx-auto
-                    grid-cols-2
-                    md:grid-cols-${quizSteps[currentStep - 1]?.options.length === 4 ? '2' : '3'}
-                  `}>
-                    {quizSteps[currentStep - 1]?.options.map((option, i) => {
-                      const currentQuestion = quizSteps[currentStep - 1];
-                      const isSelected = currentQuestion.type === 'multiple'
-                        ? formData.features.includes(option.value)
-                        : formData[currentQuestion.field] === option.value;
-
-                      const buttonWidth = quizSteps[currentStep - 1]?.options.length === 4 ? 'w-52' : 'w-44';
-                      const imageHeight = quizSteps[currentStep - 1]?.options.length === 4 ? 'h-40' : 'h-32';
-
-                      return (
-                        <button
-                          key={i}
-                          onClick={() => {
-                            handleAnswerSelect(option.value);
-                            if (currentQuestion.type === 'single') setTimeout(nextStep, 300);
+                ) : quizSteps[currentStep - 1]?.type === 'contact' ? (
+                  <div className="max-w-md mx-auto">
+                    <div className="space-y-4 mb-6">
+                      <input
+                        type="text"
+                        placeholder="Teljes név *"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                      />
+                      
+                      <div>
+                        <input
+                          type="email"
+                          placeholder="E-mail cím *"
+                          value={formData.email}
+                          onChange={(e) => {
+                            setFormData({ ...formData, email: e.target.value });
+                            if (errors.email) setErrors({ ...errors, email: undefined });
                           }}
-                          className={`group ${buttonWidth} p-3 rounded-2xl border-2 transition-all duration-300 transform hover:scale-105 flex flex-col justify-between ${
-                            isSelected
-                              ? 'border-blue-500 bg-blue-50 shadow-md shadow-blue-400/30'
-                              : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-gray-50'
+                          onBlur={() => validateContactInfo()}
+                          className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                        />
+                        {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+                      </div>
+                      
+                      <div>
+                        <input
+                          type="tel"
+                          placeholder="Telefonszám *"
+                          value={formData.phone}
+                          onChange={(e) => {
+                            setFormData({ ...formData, phone: e.target.value });
+                            if (errors.phone) setErrors({ ...errors, phone: undefined });
+                          }}
+                          onBlur={() => validateContactInfo()}
+                          className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                        />
+                        {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+                      </div>
+                    </div>
+                    
+                    <div className="mb-6">
+                      <label className="flex items-start space-x-3">
+                        <input
+                          type="checkbox"
+                          checked={formData.acceptedPrivacy}
+                          onChange={(e) => setFormData({ ...formData, acceptedPrivacy: e.target.checked })}
+                          className="mt-1 w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <span className="text-gray-700 text-sm">
+                          A gombra kattintva elfogadja az{" "}
+                          <a 
+                            href="/adatkezelesi-tajekoztato" 
+                            target="_blank" 
+                            className="text-blue-600 hover:underline font-medium"
+                          >
+                            adatkezelési tájékoztatónkat
+                          </a>.
+                        </span>
+                      </label>
+                    </div>
+                    
+                    <button
+                    onClick={() => {
+                      if (validateContactInfo()) {
+                        sendToGHL();
+                      }
+                    }}
+                      disabled={!formData.name || !formData.email || !formData.phone || !formData.acceptedPrivacy}
+                      className={`w-full py-3 rounded-xl font-semibold transition-all ${
+                        !formData.name || !formData.email || !formData.phone || !formData.acceptedPrivacy
+                          ? 'bg-gray-400 cursor-not-allowed text-gray-200'
+                          : 'bg-blue-600 text-white hover:bg-blue-500'
+                      }`}
+                    >
+                      AJÁNLATOT KAPOK
+                    </button>
+                  </div>
+                  
+                ) : (
+                  <>
+                    {['timeline', 'budget'].includes(quizSteps[currentStep - 1]?.field as string) ? (
+                      <div className="flex flex-col items-start gap-4 mb-8 max-w-md mx-auto">
+                        {quizSteps[currentStep - 1]?.options?.map((option, i) => {
+                          const currentQuestion = quizSteps[currentStep - 1];
+                          const field = currentQuestion.field as keyof FormData;
+                          const isSelected = formData[field] === option.value;
+
+                          return (
+                            <label key={i} className="flex items-center space-x-3 cursor-pointer">
+                              <input
+                                type="radio"
+                                name={field}
+                                value={option.value}
+                                checked={isSelected}
+                                onChange={() => {
+                                  handleAnswerSelect(option.value);
+                                  setTimeout(nextStep, 300);
+                                }}
+                                className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300"
+                              />
+                              <span className="text-gray-800 text-base font-medium">{option.label}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="mb-8">
+                        <div
+                          className={`grid gap-3 max-w-fit mx-auto grid-cols-2 ${
+                            quizSteps[currentStep - 1]?.options?.length === 6 ? 'md:grid-cols-3' : 'md:grid-cols-2'
                           }`}
                         >
-                          <div className={`${imageHeight} flex flex-col items-center justify-between`}>
-                            <div className="flex-grow overflow-hidden">
-                              <img
-                                src={`/uploads/${option.icon}`} 
-                                alt={option.label} 
-                                className="w-full h-full object-cover rounded-t-xl"
-                              />
-                            </div>
-                            <div className="h-10 flex items-center justify-center px-2">
-                              <span className="text-sm font-semibold text-gray-800 text-center leading-tight">
-                                {option.label}
-                              </span>
-                            </div>
+                          {quizSteps[currentStep - 1]?.options?.map((option, i) => {
+                            const currentQuestion = quizSteps[currentStep - 1];
+                            const field = currentQuestion.field as keyof FormData;
+                            
+                            const isSelected = currentQuestion.type === 'multiple'
+                              ? formData.features.includes(option.value)
+                              : formData[field] === option.value;
+
+                            return (
+                              <button
+                                key={i}
+                                onClick={() => {
+                                  handleAnswerSelect(option.value);
+                                  if (currentQuestion.type === 'single') setTimeout(nextStep, 300);
+                                }}
+                                className={`group w-44 p-3 rounded-2xl border-2 transition-all duration-300 transform hover:scale-105 flex flex-col justify-between ${
+                                  isSelected
+                                    ? 'border-blue-500 bg-blue-50 shadow-md shadow-blue-400/30'
+                                    : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-gray-50'
+                                }`}
+                              >
+                                <div className="h-32 flex flex-col items-center justify-between">
+                                  <div className="flex-grow overflow-hidden">
+                                    <img
+                                      src={`/uploads/${option.icon}`} 
+                                      alt={option.label} 
+                                      className="w-full h-full object-cover rounded-t-xl"
+                                    />
+                                  </div>
+                                  <div className="h-10 flex items-center justify-center px-2">
+                                    <span className="text-sm font-semibold text-gray-800 text-center leading-tight">
+                                      {option.label}
+                                    </span>
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* TOVÁBB button for extra services step */}
+                        {quizSteps[currentStep - 1]?.field === 'features' && (
+                          <div className="flex justify-center mt-6">
+                            <button
+                              onClick={nextStep}
+                              className="bg-blue-600 text-white px-8 py-3 rounded-full text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow hover:bg-blue-500"
+                            >
+                              TOVÁBB
+                            </button>
                           </div>
-                        </button>
-                      );
-                    })}
-                  </div>
+                        )}
+                      </div>
+                    )}
+                  </>
                 )}
 
-                {currentStep > 1 && (
+                {currentStep > 1 && quizSteps[currentStep - 1]?.type !== 'contact' && (
                   <div className="flex justify-center mt-4">
-                    <button onClick={() => setCurrentStep(currentStep - 1)} className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-full text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow">VISSZA</button>
+                    <button 
+                      onClick={() => setCurrentStep(currentStep - 1)} 
+                      className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-full text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow"
+                    >
+                      VISSZA
+                    </button>
                   </div>
                 )}
               </div>
@@ -289,116 +497,12 @@ export default function ConstructionFunnel() {
           </section>
         ) : (
           <section className="container mx-auto px-6 py-20">
-            <div className="max-w-6xl mx-auto">
-              <div className="text-center mb-12">
-                <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
-                  🎉 GRATULÁLUNK!
-                </h2>
-                <p className="text-2xl text-gray-600 mb-8">
-                  Személyre szabott ajánlatunk {getBudgetLevel()} kategóriában
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-                {/* Results Card */}
-                <div className="bg-white/90 backdrop-blur-lg rounded-3xl p-8 border border-gray-200 shadow-2xl">
-                  <h3 className="text-2xl font-bold mb-6 flex items-center text-gray-800">
-                    <Star className="w-6 h-6 text-yellow-500 mr-2" />
-                    Az Ön álomháza
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                      <span className="text-gray-600">Ház típusa:</span>
-                      <span className="font-semibold text-gray-800">{formData.projectType}</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                      <span className="text-gray-600">Költségkeret:</span>
-                      <span className="font-semibold text-gray-800">{formData.budget} M Ft</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                      <span className="text-gray-600">Méret:</span>
-                      <span className="font-semibold text-gray-800">{formData.size}</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                      <span className="text-gray-600">Időkeret:</span>
-                      <span className="font-semibold text-gray-800">{formData.timeline}</span>
-                    </div>
-                    {formData.features?.length > 0 && (
-                      <div className="py-2">
-                        <span className="text-gray-600 block mb-2">Extra szolgáltatások:</span>
-                        <div className="flex flex-wrap gap-2">
-                          {formData.features.map((feature, index) => (
-                            <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                              {feature}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Contact Form */}
-                <div className="bg-gradient-to-br from-blue-50 to-purple-50 backdrop-blur-lg rounded-3xl p-8 border border-blue-200 shadow-2xl">
-                  <h3 className="text-2xl font-bold mb-6 flex items-center text-gray-800">
-                    <Phone className="w-6 h-6 text-blue-600 mr-2" />
-                    Ingyenes konzultáció
-                  </h3>
-                  <div className="space-y-4">
-                    <input
-                      type="text"
-                      placeholder="Teljes név *"
-                      value={formData.name}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({...formData, name: e.target.value})}
-                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
-                    />
-                    <input
-                      type="email"
-                      placeholder="E-mail cím *"
-                      value={formData.email}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({...formData, email: e.target.value})}
-                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
-                    />
-                    <input
-                      type="tel"
-                      placeholder="Telefonszám *"
-                      value={formData.phone}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({...formData, phone: e.target.value})}
-                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
-                    />
-                    <button
-                      onClick={handleContactSubmit}
-                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-xl"
-                    >
-                      INGYENES KONZULTÁCIÓ KÉRÉSE
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-600 mt-4 text-center">
-                    * 24 órán belül felvesszük Önnel a kapcsolatot
-                  </p>
-                </div>
-              </div>
-
-              {/* Special Offer */}
-              <div className="bg-gradient-to-r from-orange-100 to-red-100 backdrop-blur-lg rounded-3xl p-8 border border-orange-300 shadow-2xl text-center">
-                <h3 className="text-3xl font-bold mb-4 text-orange-600">
-                  🔥 LIMITÁLT AJÁNLAT!
-                </h3>
-                <p className="text-xl mb-6 text-gray-800">
-                  Az első 10 jelentkező számára <span className="font-bold text-orange-600">15% kedvezmény</span> a teljes projektre!
-                </p>
-                <div className="flex justify-center items-center space-x-4 text-lg text-gray-700">
-                  <Clock className="w-6 h-6 text-orange-500" />
-                  <span>Az ajánlat csak a következő 48 órában érvényes!</span>
-                </div>
-              </div>
-            </div>
+           
           </section> 
         )}
       </div>
       <NegativeConsequences />
       <ReviewsGallery />
-  {/* <FbReps /> */}
     </div>
   );
 }
