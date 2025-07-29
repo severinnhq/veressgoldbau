@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import NegativeConsequences from '@/components/NegativeConsequences';
 import ReviewsGallery from '@/components/ReviewsGallery';
+import Header from '@/components/Header';
 
 import Hero from '@/components/Hero'; 
 
@@ -243,7 +244,9 @@ export default function ConstructionFunnel() {
 
 
   return (
+   
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 text-gray-800 overflow-hidden">
+        <Header />
       <Hero />
       <div className="relative z-10">
         {!showResults ? (
