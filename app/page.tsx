@@ -4,9 +4,7 @@ import React, { useState, useEffect } from 'react';
 import NegativeConsequences from '@/components/NegativeConsequences';
 import ReviewsGallery from '@/components/ReviewsGallery';
 import Header from '@/components/Header';
-
-import Hero from '@/components/Hero'; 
-
+import Hero from '@/components/Hero';
 
 interface FormData {
   projectType: string;
@@ -51,7 +49,7 @@ export default function ConstructionFunnel() {
     acceptedPrivacy: false
   });
   const [showResults, setShowResults] = useState(false);
-
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errors, setErrors] = useState<{email?: string; phone?: string}>({});
 
   const STORAGE_KEY = 'quizProgress';
@@ -78,8 +76,6 @@ export default function ConstructionFunnel() {
       JSON.stringify({ step: currentStep, data: formData, results: showResults })
     );
   }, [currentStep, formData, showResults]);
-
-
 
   const validateEmail = (email: string): boolean => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -120,14 +116,18 @@ export default function ConstructionFunnel() {
       if (!res.ok) {
         const text = await res.text();
         console.error('GHL webhook error:', res.status, text);
+        setSuccessMessage(null);
         alert('Hiba történt az adatok elküldésekor.');
         return;
       }
 
-      alert('Köszönjük! Az adatokat elküldtük.');
+      // Sikeres elküldés — a felhasználó által kért üzenet megjelenítése
+      setSuccessMessage('Sikeresen elküldtük. Kérjük hívjon fel minket: +36 70 361 4340');
       setShowResults(true);
+
     } catch (err) {
       console.error('Network error sending to GHL:', err);
+      setSuccessMessage(null);
       alert('Hálózati hiba történt.');
     }
   };
@@ -238,13 +238,8 @@ export default function ConstructionFunnel() {
     }
   };
 
- 
-    
-  
-
-
   return (
-   
+    
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 text-gray-800 overflow-hidden">
         <Header />
       <Hero />
@@ -471,7 +466,38 @@ export default function ConstructionFunnel() {
           </section>
         ) : (
           <section className="container mx-auto px-6 py-20">
-           
+            <div className="max-w-3xl mx-auto text-center">
+              <div className="bg-white rounded-3xl p-12 border border-gray-200 shadow-xl">
+                <h3 className="text-3xl font-bold mb-4 text-gray-800">Köszönjük!</h3>
+                <p className="text-lg text-gray-700 mb-6">{successMessage ?? 'A jelentkezését sikeresen megkaptuk.'}</p>
+
+                <p className="text-base text-gray-700 mb-6">Kérjük, hívjon fel minket a következő számon:</p>
+                <a href="tel:+36703614340" className="inline-block bg-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-500 transition-all">+36 70 361 4340</a>
+
+                <div className="mt-8">
+                  <button onClick={() => {
+                    // Reset quiz or redirect as needed
+                    setShowResults(false);
+                    setCurrentStep(1);
+                    setFormData({
+                      projectType: '',
+                      budget: '',
+                      timeline: '',
+                      location: '',
+                      size: '',
+                      style: '',
+                      features: [],
+                      name: '',
+                      email: '',
+                      phone: '',
+                      acceptedPrivacy: false
+                    });
+                    setSuccessMessage(null);
+                    localStorage.removeItem(STORAGE_KEY);
+                  }} className="mt-4 bg-gray-100 text-gray-800 px-6 py-3 rounded-full font-semibold hover:bg-gray-200 transition-all">Vissza a kezdőlapra</button>
+                </div>
+              </div>
+            </div>
           </section> 
         )}
       </div>
