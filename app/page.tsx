@@ -122,7 +122,7 @@ export default function ConstructionFunnel() {
       }
 
       // Sikeres elküldés — a felhasználó által kért üzenet megjelenítése
-      setSuccessMessage('Sikeresen elküldtük. Kérjük hívjon fel minket: +36 70 361 4340');
+      setSuccessMessage('Hívjuk amilyen hamar tudjuk!');
       setShowResults(true);
 
     } catch (err) {
@@ -469,10 +469,9 @@ export default function ConstructionFunnel() {
             <div className="max-w-3xl mx-auto text-center">
               <div className="bg-white rounded-3xl p-12 border border-gray-200 shadow-xl">
                 <h3 className="text-3xl font-bold mb-4 text-gray-800">Köszönjük!</h3>
-                <p className="text-lg text-gray-700 mb-6">{successMessage ?? 'A jelentkezését sikeresen megkaptuk.'}</p>
+                <p className="text-lg text-gray-700 mb-6">{successMessage ?? 'Hívjuk amilyen hamar tudjuk!'}</p>
 
-                <p className="text-base text-gray-700 mb-6">Kérjük, hívjon fel minket a következő számon:</p>
-                <a href="tel:+36703614340" className="inline-block bg-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-500 transition-all">+36 70 361 4340</a>
+                
 
                 <div className="mt-8">
                   <button onClick={() => {
